@@ -1,0 +1,409 @@
+## Data Entity
+DataEntity:
+  allOf:
+    - $ref: '#/components/schemas/BaseObject'
+    - type: object
+      properties:
+        updated_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        type:
+          $ref: '#/components/schemas/DataEntityType'
+        dataset:
+          $ref: '#/components/schemas/DataSet'
+        data_transformer:
+          $ref: '#/components/schemas/DataTransformer'
+        data_transformer_run:
+          $ref: '#/components/schemas/DataTransformerRun'
+        data_quality_test:
+          $ref: '#/components/schemas/DataQualityTest'
+        data_quality_test_run:
+          $ref: '#/components/schemas/DataQualityTestRun'
+        data_input:
+          $ref: '#/components/schemas/DataInput'
+        data_consumer:
+          $ref: '#/components/schemas/DataConsumer'
+        data_entity_group:
+          $ref: '#/components/schemas/DataEntityGroup'
+      required:
+        - type
+
+## Datasets
+DataSet:
+ properties:
+   parent_oddrn:
+     type: string
+   description:
+     type: string
+   updated_at:
+     type: string
+     format: date-time
+   field_list:
+     type: array
+     items:
+       $ref: '#/components/schemas/DataSetField'
+ required:
+   - description
+   - field_list
+
+
+DataSetField:
+  allOf:
+    - $ref: '#/components/schemas/BaseObject'
+    - type: object
+      properties:
+        parent_field_oddrn:
+          type: string
+        type:
+          $ref: '#/components/schemas/DataSetFieldType'
+        is_primary_key:
+          type: boolean
+        is_sort_key:
+          type: boolean
+        is_key:
+          type: boolean
+        is_value:
+          type: boolean
+        reference_oddrn:
+          type: string
+        default_value:
+          type: string
+        stats:
+          $ref: "#/components/schemas/DataSetFieldStat"
+        enum_values:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataSetFieldEnumValue"
+      required:
+        - type
+
+
+DataSetFieldType:
+ type: object
+ properties:
+   type:
+     type: string
+     enum:
+        - TYPE_STRING
+        - TYPE_NUMBER
+        - TYPE_INTEGER
+        - TYPE_BOOLEAN
+        - TYPE_CHAR
+        - TYPE_DATETIME
+        - TYPE_TIME
+        - TYPE_STRUCT
+        - TYPE_BINARY
+        - TYPE_LIST
+        - TYPE_MAP
+        - TYPE_UNION
+        - TYPE_DURATION
+        - TYPE_UNKNOWN
+   logical_type:
+     type: string
+   is_nullable:
+     type: boolean
+ required:
+   - type
+   - is_nullable
+
+
+### Table
+{
+    "oddrn": "//s3/cloud/aws/buckets/odd-data-test/",
+    "name": "odd-data-test",
+    "owner": "aws:iam:---",
+    "metadata": {
+        "location": "internet",        
+    },
+    "parent_oddrn": null,    
+    "description": "nuScenes Image dataset metadata",
+    "updatedAt": "2023-07-10",
+    "fieldList": [
+        {
+           "oddrn": "//s3/cloud/aws/buckets/odd-data-test/attribute.json",
+           "name": "attribute",
+           "owner": "aws:iam:---",
+           "metadata": {},
+           "parentFieldOddrn": null,
+           "type": "TYPE_STRING",
+           "isKey": true,
+           "isValue": True,
+           "defaultValue": null,
+           "description": "An attribute is a property of an instance that can change while the category remains the same.",
+           "stats": {
+               "string_stats": {
+                   "maxLength": 100,
+                   "avgLength": 45,
+                   "nullsCount": 0,
+                   "uniqueCount": 10000
+               }
+           }
+        },
+        {
+           "oddrn": "//s3/cloud/aws/buckets/odd-data-test/calibrated_sensor.json",
+           "name": "calibrated_sensor",
+           "owner": "aws:iam:---",
+           "metadata": {},
+           "parentFieldOddrn": null,
+           "type": {"TYPE_STRING", "TYPE_LIST"},
+           "isKey": true,
+           "isValue": True,
+           "defaultValue": null,
+           "description": "Definition of a particular sensor (lidar/radar/camera) as calibrated on a particular vehicle.",
+           "stats": {
+               "string_stats": {
+                   "maxLength": 120,
+                   "avgLength": 52,
+                   "nullsCount": 0,
+                   "uniqueCount": 10000
+               },
+               "list_stats": {
+               }
+           }
+        },
+        {
+           "oddrn": "//s3/cloud/aws/buckets/odd-data-test/category.json",
+           "name": "category",
+           "owner": "aws:---",
+           "metadata": {},
+           "parentFieldOddrn": null,
+           "type": "TYPE_STRING",
+           "isKey": True,
+           "isValue": True,
+           "defaultValue": null,
+           "description": "Taxonomy of object categories (e.g. vehicle, human). Subcategories are delineated by a period (e.g. human.pedestrian.adult).",
+           "stats": {
+               "string_stats": {
+                   "maxLength": 400,
+                   "avgLength": 100,
+                   "nullsCount": 0,
+                   "uniqueCount": 10000
+               }, 
+           }
+        },################ 해야함
+        {
+           "oddrn": "//s3/cloud/aws/buckets/odd-data-test/ego_pose.json",
+           "name": "ego_pose",
+           "owner": "aws:iam:---",
+           "metadata": {},
+           "parentFieldOddrn": null,
+           "type": "TYPE_STRING",
+           "isKey": True,
+           "isValue": True,
+           "defaultValue": null,
+           "description": "Ego vehicle pose at a particular timestamp. Given with respect to global coordinate system of the log's map. The ego_pose is the output of a lidar map-based localization algorithm described in our paper. The localization is 2-dimensional in the x-y plane.",
+           "stats": {
+               "string_stats": {
+                   "maxLength": 120,
+                   "avgLength": 52,
+                   "nullsCount": 0,
+                   "uniqueCount": 10000
+               }
+           }
+        },
+        {
+           "oddrn": "//s3/cloud/aws/buckets/odd-data-test/category.json",
+           "name": "name",
+           "owner": "aws:iam:88898998/username",
+           "metadata": {},
+           "parentFieldOddrn": null,
+           "type": "TYPE_STRING",
+           "isKey": false,
+           "isValue": false,
+           "defaultValue": null,
+           "description": "Goods name",
+           "stats": {
+               "string_stats": {
+                   "maxLength": 120,
+                   "avgLength": 52,
+                   "nullsCount": 0,
+                   "uniqueCount": 10000
+               }
+           }
+        },
+        {
+           "oddrn": "//s3/cloud/aws/buckets/odd-data-test/category.json",
+           "name": "name",
+           "owner": "aws:iam:88898998/username",
+           "metadata": {},
+           "parentFieldOddrn": null,
+           "type": "TYPE_STRING",
+           "isKey": false,
+           "isValue": false,
+           "defaultValue": null,
+           "description": "Goods name",
+           "stats": {
+               "string_stats": {
+                   "maxLength": 120,
+                   "avgLength": 52,
+                   "nullsCount": 0,
+                   "uniqueCount": 10000
+               }
+           }
+        },
+        {
+           "oddrn": "//s3/cloud/aws/buckets/odd-data-test/category.json",
+           "name": "name",
+           "owner": "aws:iam:88898998/username",
+           "metadata": {},
+           "parentFieldOddrn": null,
+           "type": "TYPE_STRING",
+           "isKey": false,
+           "isValue": false,
+           "defaultValue": null,
+           "description": "Goods name",
+           "stats": {
+               "string_stats": {
+                   "maxLength": 120,
+                   "avgLength": 52,
+                   "nullsCount": 0,
+                   "uniqueCount": 10000
+               }
+           }
+        },
+        {
+           "oddrn": "//s3/cloud/aws/buckets/odd-data-test/category.json",
+           "name": "name",
+           "owner": "aws:iam:88898998/username",
+           "metadata": {},
+           "parentFieldOddrn": null,
+           "type": "TYPE_STRING",
+           "isKey": false,
+           "isValue": false,
+           "defaultValue": null,
+           "description": "Goods name",
+           "stats": {
+               "string_stats": {
+                   "maxLength": 120,
+                   "avgLength": 52,
+                   "nullsCount": 0,
+                   "uniqueCount": 10000
+               }
+           }
+        },
+        {
+           "oddrn": "//s3/cloud/aws/buckets/odd-data-test/category.json",
+           "name": "name",
+           "owner": "aws:iam:88898998/username",
+           "metadata": {},
+           "parentFieldOddrn": null,
+           "type": "TYPE_STRING",
+           "isKey": false,
+           "isValue": false,
+           "defaultValue": null,
+           "description": "Goods name",
+           "stats": {
+               "string_stats": {
+                   "maxLength": 120,
+                   "avgLength": 52,
+                   "nullsCount": 0,
+                   "uniqueCount": 10000
+               }
+           }
+        },
+        {
+           "oddrn": "//s3/cloud/aws/buckets/odd-data-test/category.json",
+           "name": "name",
+           "owner": "aws:iam:88898998/username",
+           "metadata": {},
+           "parentFieldOddrn": null,
+           "type": "TYPE_STRING",
+           "isKey": false,
+           "isValue": false,
+           "defaultValue": null,
+           "description": "Goods name",
+           "stats": {
+               "string_stats": {
+                   "maxLength": 120,
+                   "avgLength": 52,
+                   "nullsCount": 0,
+                   "uniqueCount": 10000
+               }
+           }
+        },
+        {
+           "oddrn": "//s3/cloud/aws/buckets/odd-data-test/category.json",
+           "name": "name",
+           "owner": "aws:iam:88898998/username",
+           "metadata": {},
+           "parentFieldOddrn": null,
+           "type": "TYPE_STRING",
+           "isKey": false,
+           "isValue": false,
+           "defaultValue": null,
+           "description": "Goods name",
+           "stats": {
+               "string_stats": {
+                   "maxLength": 120,
+                   "avgLength": 52,
+                   "nullsCount": 0,
+                   "uniqueCount": 10000
+               }
+           }
+        },
+        {
+           "oddrn": "//s3/cloud/aws/buckets/odd-data-test/category.json",
+           "name": "name",
+           "owner": "aws:iam:88898998/username",
+           "metadata": {},
+           "parentFieldOddrn": null,
+           "type": "TYPE_STRING",
+           "isKey": false,
+           "isValue": false,
+           "defaultValue": null,
+           "description": "Goods name",
+           "stats": {
+               "string_stats": {
+                   "maxLength": 120,
+                   "avgLength": 52,
+                   "nullsCount": 0,
+                   "uniqueCount": 10000
+               }
+           }
+        },
+        {
+           "oddrn": "//s3/cloud/aws/buckets/odd-data-test/category.json",
+           "name": "name",
+           "owner": "aws:iam:88898998/username",
+           "metadata": {},
+           "parentFieldOddrn": null,
+           "type": "TYPE_STRING",
+           "isKey": false,
+           "isValue": false,
+           "defaultValue": null,
+           "description": "Goods name",
+           "stats": {
+               "string_stats": {
+                   "maxLength": 120,
+                   "avgLength": 52,
+                   "nullsCount": 0,
+                   "uniqueCount": 10000
+               }
+           }
+        },
+        {
+           "oddrn": "//s3/cloud/aws/buckets/odd-data-test/category.json",
+           "name": "name",
+           "owner": "aws:iam:88898998/username",
+           "metadata": {},
+           "parentFieldOddrn": null,
+           "type": "TYPE_STRING",
+           "isKey": false,
+           "isValue": false,
+           "defaultValue": null,
+           "description": "Goods name",
+           "stats": {
+               "string_stats": {
+                   "maxLength": 120,
+                   "avgLength": 52,
+                   "nullsCount": 0,
+                   "uniqueCount": 10000
+               }
+           }
+        }   
+    ]
+}
+

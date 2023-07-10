@@ -1,0 +1,650 @@
+components:
+  schemas:
+    BaseObject:
+      type: object
+      properties:
+        oddrn:
+          type: string
+          example: "//aws/glue/{account_id}/{database}/{tablename}"
+        name:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+        owner:
+          type: string
+          example: "//aws/iam/{account_id}/user/name"
+        metadata:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetadataExtension"
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+      required: # 최소 제공되어야하는 내용
+        - oddrn
+        - name
+
+# 기본 entity -> 해당 설정시 dataset 만들어짐
+    DataEntity:
+      allOf:
+        - $ref: '#/components/schemas/BaseObject'
+        - type: object
+          properties:
+            updated_at:
+              type: string
+              format: date-time
+            created_at:
+              type: string
+              format: date-time
+            type:
+              $ref: '#/components/schemas/DataEntityType'
+            dataset:
+              $ref: '#/components/schemas/DataSet'
+            data_transformer:
+              $ref: '#/components/schemas/DataTransformer'
+            data_transformer_run:
+              $ref: '#/components/schemas/DataTransformerRun'
+            data_quality_test:
+              $ref: '#/components/schemas/DataQualityTest'
+            data_quality_test_run:
+              $ref: '#/components/schemas/DataQualityTestRun'
+            data_input:
+              $ref: '#/components/schemas/DataInput'
+            data_consumer:
+              $ref: '#/components/schemas/DataConsumer'
+            data_entity_group:
+              $ref: '#/components/schemas/DataEntityGroup'
+          required:
+            - type
+            
+# 데이터 리스트 각 데이터의 oddrn만 모아오면 됨
+    DataEntityList:
+      type: object
+      properties:
+        data_source_oddrn:
+          type: string
+          example: //aws/s3/odd-data-test
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataEntity'
+      required:
+        - data_source_oddrn
+
+# 통계에 사용되는 것은 데이터의 아이템이면 됨
+    DatasetStatisticsList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataSetStatistics'
+      required:
+        - items
+
+# 태그 명만 있으면 됨
+    Tag:
+      type: object
+      properties:
+        name:
+          type: string
+      required:
+        - name
+
+# 각 데이터들의 부모 oodrn을 통해 데이터셋을 파악할 수 있음
+    DataSet:
+      type: object
+      properties:
+        parent_oddrn:
+          type: string
+        rows_number:
+          type: integer
+          format: int64
+        field_list:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataSetField'
+      required:
+        - field_list
+
+# 각 데이터의 통계 -> 통계를 내고자하는 테이블의 컬럼명까지 적어줘야 fields oodrn이 된다
+    DataSetStatistics:
+      type: object
+      properties:
+        dataset_oddrn:
+          type: string
+        fields: 
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/DataSetFieldStat'
+          description: >
+            key is a field oddrn.
+            For example: "//aws/S3/{account_id}/{database}/{tablename}/columns/{column_name}"
+      required:
+        - dataset_oddrn
+        - fields        
+
+# 데이터셋의 필드 통계 -> 각 필드의 데이터형태를 알려준다
+    DataSetFieldStat:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"         
+        field_oddrn: 
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/DataSetFields/parent_field_oddrn'
+          description: >
+            key is a field oddrn.
+            For example: "//aws/S3/{account_id}/{database}/{tablename}/columns/{column_name}"
+        complex_stats:
+          $ref: '#/components/schemas/ComplexFieldStat'
+        boolean_stats:
+          $ref: '#/components/schemas/BooleanFieldStat'
+        integer_stats:
+          $ref: '#/components/schemas/IntegerFieldStat'
+        number_stats:
+          $ref: '#/components/schemas/NumberFieldStat'
+        string_stats:
+          $ref: '#/components/schemas/StringFieldStat'
+        binary_stats:
+          $ref: '#/components/schemas/BinaryFieldStat'
+        datetime_stats:
+          $ref: '#/components/schemas/DateTimeFieldStat'
+      required:
+        - field_oddrn            
+
+# 불린 형태
+    BooleanFieldStat:
+      type: object
+      properties:
+        true_count:
+          type: integer
+          format: int64
+        false_count:
+          type: integer
+          format: int64
+        nulls_count:
+          type: integer
+          format: int64
+      required:
+        - true_count
+        - false_count
+        - nulls_count
+
+# 복합형
+    ComplexFieldStat:
+      type: object
+      properties:
+        nulls_count:
+          type: integer
+          format: int64
+        unique_count:
+          type: integer
+          format: int64
+      required:
+        - nulls_count
+        - unique_count
+
+# 숫자형
+    NumberFieldStat:
+      type: object
+      properties:
+        low_value:
+          type: number
+        high_value:
+          type: number
+        mean_value:
+          type: number
+        median_value:
+          type: number
+        nulls_count:
+          type: integer
+          format: int64
+        unique_count:
+          type: integer
+          format: int64
+      required:
+        - low_value
+        - high_value
+        - nulls_count
+        - unique_count
+
+# 문자형
+    StringFieldStat:
+      type: object
+      properties:
+        max_length:
+          type: integer
+        avg_length:
+          type: number
+        nulls_count:
+          type: integer
+          format: int64
+        unique_count:
+          type: integer
+          format: int64
+      required:
+        - max_length
+        - avg_length
+        - nulls_count
+        - unique_count
+
+# 바이너리
+    BinaryFieldStat:
+      type: object
+      properties:
+        max_length:
+          type: integer
+        avg_length:
+          type: number
+        nulls_count:
+          type: integer
+          format: int64
+        unique_count:
+          type: integer
+          format: int64
+      required:
+        - max_length
+        - avg_length
+        - nulls_count
+        - unique_count
+
+# int형
+    IntegerFieldStat:
+      type: object
+      properties:
+        low_value:
+          type: integer
+          format: int64
+        high_value:
+          type: integer
+          format: int64
+        mean_value:
+          type: integer
+          format: int64
+        median_value:
+          type: integer
+          format: int64
+        nulls_count:
+          type: integer
+          format: int64
+        unique_count:
+          type: integer
+          format: int64
+      required:
+        - low_value
+        - high_value
+        - nulls_count
+        - unique_count
+
+# 시간
+    DateTimeFieldStat:
+      type: object
+      properties:
+        low_value:
+          type: string
+          format: date-time
+        high_value:
+          type: string
+          format: date-time
+        mean_value:
+          type: string
+          format: date-time
+        median_value:
+          type: string
+          format: date-time
+        nulls_count:
+          type: integer
+          format: int64
+        unique_count:
+          type: integer
+          format: int64
+      required:
+        - low_value
+        - high_value
+        - nulls_count
+        - unique_count
+
+# Enum 타입
+    DataSetFieldEnumValue:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      required:
+        - name
+
+# 데이터셋 필드
+    DataSetField:
+      allOf:
+        - $ref: '#/components/schemas/BaseObject'
+        - type: object
+          properties:
+            parent_field_oddrn:
+              type: string
+            type:
+              $ref: '#/components/schemas/DataSetFieldType'
+            is_primary_key:
+              type: boolean
+            is_sort_key:
+              type: boolean
+            is_key:
+              type: boolean
+            is_value:
+              type: boolean
+            reference_oddrn:
+              type: string
+            default_value:
+              type: string
+            stats:
+              $ref: "#/components/schemas/DataSetFieldStat"
+            enum_values:
+              type: array
+              items:
+                $ref: "#/components/schemas/DataSetFieldEnumValue"
+          required:
+            - type
+
+# 각 데이터셋 필드의 타입들
+    DataSetFieldType:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - TYPE_STRING
+            - TYPE_NUMBER
+            - TYPE_INTEGER
+            - TYPE_BOOLEAN
+            - TYPE_CHAR
+            - TYPE_DATETIME
+            - TYPE_TIME
+            - TYPE_STRUCT
+            - TYPE_BINARY
+            - TYPE_LIST
+            - TYPE_MAP
+            - TYPE_UNION
+            - TYPE_DURATION
+            - TYPE_REFERENCE
+            - TYPE_UNKNOWN
+        logical_type:
+          type: string
+        is_nullable:
+          type: boolean
+      required:
+        - type
+        - is_nullable
+
+    DataTransformer:
+      type: object
+      properties:
+        source_code_url:
+          type: string
+        sql:
+          type: string
+        inputs:
+          type: array
+          items:
+            type: string
+        outputs:
+          type: array
+          items:
+            type: string
+      required:
+        - inputs
+        - outputs
+
+    DataConsumer:
+      type: object
+      properties:
+        inputs:
+          type: array
+          items:
+            type: string
+
+    DataInput:
+      type: object
+      properties:
+        outputs:
+          type: array
+          items:
+            type: string
+
+
+    DataEntityGroup:
+      type: object
+      properties:
+        entities_list:
+          type: array
+          items:
+            type: string
+        group_oddrn:
+          type: string
+      required:
+        - entities_list
+
+    DataQualityTestExpectation:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "expect_table_row_count_to_be_between"
+      additionalProperties:
+        type: string
+
+    DataQualityTest:
+      type: object
+      properties:
+        suite_name:
+          type: string
+        dataset_list:
+          type: array
+          items:
+            type: string
+        expectation:
+          $ref: '#/components/schemas/DataQualityTestExpectation'
+        suite_url:
+          type: string
+        linked_url_list:
+          type: array
+          items:
+            $ref: '#/components/schemas/LinkedUrl'
+      required:
+        - suite_name
+        - expectation
+        - dataset_list
+
+    LinkedUrl:
+      type: object
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+      required:
+        - name
+        - url
+    
+    JobRunStatus:
+      type: string
+      enum:
+        - SUCCESS
+        - FAILED
+        - SKIPPED
+        - BROKEN
+        - ABORTED
+        - RUNNING
+        - UNKNOWN
+
+    QualityRunStatus:
+      type: string
+      enum:
+        - SUCCESS
+        - FAILED
+        - SKIPPED
+        - BROKEN
+        - ABORTED
+        - RUNNING
+        - UNKNOWN
+
+    DataTransformerRun:
+      type: object
+      properties:
+        transformer_oddrn:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        status_reason:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobRunStatus'
+      required:
+        - transformer_oddrn
+        - start_time
+        - status
+
+    DataQualityTestRun:
+      type: object
+      properties:
+        data_quality_test_oddrn:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        status_reason:
+          type: string
+        status:
+          $ref: '#/components/schemas/QualityRunStatus'
+      required:
+        - data_quality_test_oddrn
+        - start_time
+        - status
+
+    DataEntityType:
+      type: string
+      enum: 
+        - TABLE
+        - VIEW
+        - FILE
+        - FEATURE_GROUP
+        - KAFKA_TOPIC
+        - JOB
+        - JOB_RUN
+        - ML_MODEL
+        - ML_MODEL_TRAINING
+        - DASHBOARD
+        - DAG
+        - ML_EXPERIMENT
+        - GRAPH_NODE
+        - UNKNOWN
+        - MICROSERVICE
+        - API_CALL
+        - DATABASE_SERVICE
+        - API_SERVICE
+        - KAFKA_SERVICE
+
+    MetadataExtension:
+      type: object
+      properties:
+        schema_url:
+          description: "The JSON Pointer (https://tools.ietf.org/html/rfc6901) URL to the corresponding version of the schema definition for this extension"
+          example: https://raw.githubusercontent.com/opendatadiscovery/opendatadiscovery-specification/main/specification/extensions/glue.json#/definitions/GlueDataSetExtension
+          type: string
+          format: uri
+        metadata:
+          type: object
+          additionalProperties: true
+      required:
+        - schema_url
+        - metadata
+
+    DataSource:
+      type: object
+      properties:
+        oddrn:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+      required:
+        - oddrn
+        - name
+
+    DataSourceList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataSource'
+      required:
+        - items
+
+    IngestionAlertType:
+      type: string
+      enum:
+        - DATA_SOURCE_CONNECTION_ERROR
+        - DATA_SOURCE_GENERIC_ERROR
+
+    IngestionAlert:
+      type: object
+      properties:
+        description:
+          type: string
+        type:
+          $ref: '#/components/schemas/IngestionAlertType'
+        related_data_source_oddrn:
+          type: string
+        related_data_entity_oddrn:
+          type: string
+      required:
+        - description
+        - type
+        - related_data_source_oddrn
+
+    IngestionAlertList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/IngestionAlert'
+      required:
+        - items
+
+    CompactDataEntity:
+      type: object
+      properties:
+        oddrn:
+          type: string
+        type:
+          $ref: '#/components/schemas/DataEntityType'
+      required:
+        - oddrn
+        - type
+
+    CompactDataEntityList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompactDataEntity'
+      required:
+        - items
